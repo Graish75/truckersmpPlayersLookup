@@ -1,0 +1,93 @@
+QMainWindow {
+    background-color: #1e1e1e;
+}
+
+QLabel {
+    color: #ffffff;
+    font-size: 14px;
+}
+
+QPushButton {
+    background-color: #2d2d30;
+    color: white;
+    border: 1px solid #3c3c3c;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+QPushButton:hover {
+    background-color: #3a3a3d;
+}
+
+QPushButton:pressed {
+    background-color: #0078d7;
+    border: 1px solid #005499;
+}
+
+QLineEdit, QComboBox {
+    background-color: #252526;
+    color: #ffffff;
+    border: 1px solid #3c3c3c;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+QLineEdit:focus, QComboBox:focus {
+    border: 1px solid #0078d7;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #1e1e1e;
+    color: white;
+    border: 1px solid #3c3c3c;
+    selection-background-color: #0078d7;
+}
+
+QCheckBox {
+    color: white;
+}
+
+QScrollBar:vertical {
+    background: #2d2d30;
+    width: 10px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #555;
+    min-height: 20px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #888;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+QToolTip {
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    padding: 4px;
+    border-radius: 3px;
+}
+
+#resultFrame {
+    background-color: #2d2d30;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+#resultFrame QLabel {
+    font-size: 15px;
+    color: #ffffff;
+    font-family: "Segoe UI", "Arial Rounded MT Bold", "Calibri", sans-serif;
+    vertical-align: top;
+    padding-top: 0px;
+}
