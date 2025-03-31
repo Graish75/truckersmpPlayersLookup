@@ -2,23 +2,23 @@ import sys
 import os
 import ctypes
 import requests
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel,
-    QLineEdit, QPushButton, QComboBox, QMessageBox, QFrame
-)
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
+from PyQt6.QtCore import *
+from PyQt6.QtWebEngineWidgets import *
 
 os.environ["QT_LOGGING_RULES"] = "*.debug=false;qt.qpa.*=false"
+os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--enable-gpu --enable-webgl --ignore-gpu-blocklist"
+os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = "1"
 
 width, height = (
     ctypes.windll.user32.GetSystemMetrics(0),
     ctypes.windll.user32.GetSystemMetrics(1)
 )
 
-print(width, height)
+#print(width, height)
 
-windowDimensions = {'x': int(int(width)/6), 'y': int(int(height)/6), 'w': 1280, 'h': 720}
+windowDimensions = {'x': int(width / 6), 'y': int(height / 8), 'w': 1280, 'h': 800}
 
 class APIFetcher(QObject):
     finished = pyqtSignal(dict)
@@ -34,7 +34,7 @@ class APIFetcher(QObject):
             if self.id_type == "TMPID":
                 url = f"https://api.truckersmp.com/v2/player/{self.id_value}"
             else:
-                url = f"https://api.truckersmp.com/v2/steam/{self.id_value}"
+                url = f"https://api.truckersmp.com/v2/player/{self.id_value}"
 
             response = requests.get(url, timeout=10)
             if response.status_code != 200:
@@ -83,11 +83,18 @@ class MyWindow(QMainWindow):
         frame_layout.addWidget(self.result_label)
         self.result_frame.setLayout(frame_layout)
 
+        # Embedded browser (map.truckersmp.com)
+        self.browser = QWebEngineView()
+        self.browser.setUrl(QUrl("https://map.truckersmp.com"))
+        self.browser.setMinimumHeight(400)  # Adjust height as needed
+
+        # Main layout
         layout = QVBoxLayout()
         layout.addWidget(self.dropdown)
         layout.addWidget(self.input_field)
         layout.addWidget(self.search_button)
         layout.addWidget(self.result_frame)
+        layout.addWidget(self.browser)
 
         central = QWidget()
         central.setLayout(layout)
@@ -115,6 +122,9 @@ class MyWindow(QMainWindow):
 
         # Setup fetcher thread
         self.thread = QThread()
+        if id_type == "TMPID" and len(id_value) > 7:
+            print("[CRITICAL]: The TruckersMP ID you gave is invalid,\nswitch to 'SteamID' search from the dropdown menu\nto use a SteamID as input.")
+            exit(1)
         self.worker = APIFetcher(id_type, id_value)
         self.worker.moveToThread(self.thread)
 
