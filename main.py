@@ -59,6 +59,7 @@ class MyWindow(QMainWindow):
             windowDimensions['w'],
             windowDimensions['h']
         )
+        self.setWindowIcon(QIcon(".\\data\\png\\icon.png"))
         self.setup_ui()
 
     def setup_ui(self):
@@ -108,6 +109,13 @@ class MyWindow(QMainWindow):
         except Exception as e:
             print(f"[ERROR]: Failed to load QSS: {e}")
             return 1
+        
+    def inject_my_js(self):
+        #print("Injecting JS now...")
+        js = '''
+            Set(zoom=2.6);
+        '''
+        self.browser.page().runJavaScript(js)
 
     def start_search(self):
         id_value = self.input_field.text().strip()
@@ -119,6 +127,12 @@ class MyWindow(QMainWindow):
 
         self.search_button.setEnabled(False)
         self.result_label.setText("Searching...")
+
+        # Update browser URL dynamically based on input
+        self.browser.setUrl(QUrl(f"https://map.truckersmp.com/?follow={id_value}"))
+
+        # Wait 2 seconds before injecting JS
+        QTimer.singleShot(2000, self.inject_my_js)
 
         # Setup fetcher thread
         self.thread = QThread()
@@ -137,10 +151,71 @@ class MyWindow(QMainWindow):
 
         self.thread.start()
 
+    def snowflakeToName(self, discordId):
+        url = f"https://dashboard.botghost.com/api/public/tools/user_lookup/{discordId}"
+
+        headers_common = {
+            "origin": "https://botghost.com",
+            "referer": "https://botghost.com/",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        }
+
+        options_headers = headers_common.copy()
+        options_headers.update({
+            "accept": "*/*",
+            "accept-language": "it-IT,it;q=0.9",
+            "access-control-request-headers": "access-control-allow-credentials",
+            "access-control-request-method": "GET",
+            "priority": "u=1, i",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site"
+        })
+
+        requests.options(url, headers=options_headers)
+
+        get_headers = headers_common.copy()
+        get_headers.update({
+            "accept": "application/json",
+            "accept-language": "it-IT,it;q=0.9",
+            "access-control-allow-credentials": "true",
+            "priority": "u=1, i",
+            "sec-ch-ua": '"Chromium";v="134", "Not:A-Brand";v="24", "Brave";v="134"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "sec-gpc": "1"
+        })
+
+        discordRespose = requests.get(url, headers=get_headers)
+
+        if discordRespose.status_code == 200:
+            discordRespose = discordRespose.json()
+            #print("Discord data calculated!")
+            return discordRespose
+        else:
+            print("Error:", discordRespose.status_code)
+            return 1
+    
     def on_data_received(self, data):
+        groupColor=data.get("groupColor", "N/A")
+        discordId=data.get("discordSnowflake", "N/A")
+        if discordId != None:
+            discordArray=MyWindow.snowflakeToName(self, discordId)
+            if discordArray == 1:
+                print("An unknown error has occurred!")
+                return
+            discordName = discordArray['username']
+            discordDiscr = discordArray['discriminator']
+        else:
+            discordName = "N/A"
+            discordDiscr = ""
         info = f"""<b>Username:</b> {data.get("name", "N/A")}<br>
 <b>SteamID:</b> {data.get("steamID", "N/A")}<br>
-<b>Group:</b> {data.get("groupName", "N/A")}<br>
+<b>Discord account:</b> {discordName}#{discordDiscr} ({discordId})<br>
+<b>Group:</b> <span style="color:{groupColor}">{data.get("groupName", "N/A")}</span><br>
 <b>Banned:</b> {"Yes" if data.get("banned", False) else "No"}<br>
 <b>Member Since:</b> {data.get("joinDate", "N/A")}<br>
 """
@@ -169,4 +244,4 @@ if __name__ == "__main__":
         print("[CRITICAL]: Critical error occurred. Exit code 1.")
         exit(1)
     print("[INFO]: Program exited successfully. Exit code 0.")
-    exit(0)
+    #exit(0)
